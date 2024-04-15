@@ -1,0 +1,152 @@
+import java.util.Scanner;
+
+public class Main {
+    
+    private static final String ADMIN_USERNAME = "admin";
+    private static final String ADMIN_PASSWORD = "password";
+
+    public static void main(String[] args) {
+        Inventory inventory = new Inventory();
+        Admin admin = new Admin(inventory);
+        Customer customer = new Customer(inventory);
+        //This is the way the user selects a role
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("Choose role: 1.Admin  2.Customer  3.Exit");
+            int roleChoice = Integer.parseInt(scanner.nextLine());
+
+            switch (roleChoice) {
+                case 1:
+                    if (authenticateAdmin(scanner)) {
+                        boolean adminSession = true;
+                        while (adminSession) {
+                            adminSession = adminMenu(admin, scanner);
+                        }
+                    }
+                    break;
+                case 2:
+                    boolean customerSession = true;
+                    while (customerSession) {
+                        customerSession = customerMenu(customer, scanner);
+                    }
+                    break;
+                case 3:
+                    System.exit(0);
+                    break;
+                default:
+                    System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+    
+    private static boolean authenticateAdmin(Scanner scanner) {
+        System.out.println("Enter username:");
+        String username = scanner.nextLine();
+        System.out.println("Enter password:");
+        String password = scanner.nextLine();
+        return ADMIN_USERNAME.equals(username) && ADMIN_PASSWORD.equals(password);
+    }
+    
+    //Logic for admin menu
+    private static boolean adminMenu(Admin admin, Scanner scanner) {
+        System.out.println("Admin: 1.Add Item  2.Remove Item  3.View Total Inventory  4.Filter Inventory  5.Return");
+        int choice = Integer.parseInt(scanner.nextLine());
+
+        switch (choice) {
+            case 1:
+                addItem(admin, scanner);
+                return true;
+            case 2:
+                removeItem(admin, scanner);
+                return true;
+            case 3:
+                admin.viewInventory();
+                return true;
+            case 4:   
+                System.out.println("Enter category to view (Tops, Bottoms, InnerWear, OuterWear):");
+                String category = scanner.nextLine();
+                admin.viewSortedInventory(category);
+                return true;
+
+            case 5:
+                return false;
+            default:
+                System.out.println("Invalid choice.");
+                return true;
+        }
+    }
+    // logic for customer menu
+    private static boolean customerMenu(Customer customer, Scanner scanner) {
+        System.out.println("Customer Menu: 1.Add to Cart  2.Checkout  3.Return");
+        int choice = Integer.parseInt(scanner.nextLine());
+
+        switch (choice) {
+            case 1:
+                customer.shop();
+                return true;
+            case 2:
+                System.out.println("Enter membership code:");
+                System.out.println("If not a member enter any letter");
+                String code = scanner.nextLine();
+                customer.setMembership(code.equals("MEMBER2024"));
+                customer.checkout();
+                return true;
+
+            case 3:
+                return false;
+            default:
+                System.out.println("Invalid choice.");
+                return true;
+        }
+    }
+
+    // This is how admin adds clothes
+    private static void addItem(Admin admin, Scanner scanner) {
+        System.out.println("Select type of clothing: 1. Tops 2. Bottoms");
+        int typeChoice = Integer.parseInt(scanner.nextLine());
+        System.out.println("Enter name:");
+        String name = scanner.nextLine();
+        System.out.println("Enter price:");
+        double price = Double.parseDouble(scanner.nextLine());
+        System.out.println("Enter quantity:");
+        int quantity = Integer.parseInt(scanner.nextLine());
+
+        if (typeChoice == 1) {
+            System.out.println("Enter sleeve length:");
+            String sleeveLength = scanner.nextLine();
+            System.out.println("Select type of Top: 1. InnerWear 2. OuterWear");
+            int topType = Integer.parseInt(scanner.nextLine());
+            Tops item;
+            if (topType == 1) {
+                item = new InnerWear(name, price, quantity, sleeveLength);
+            } else {
+                item = new OuterWear(name, price, quantity, sleeveLength);
+            }
+            admin.addNewItem(item, quantity);
+        } else if (typeChoice == 2) {
+            System.out.println("Enter waist size:");
+            int waistSize = Integer.parseInt(scanner.nextLine());
+            System.out.println("Enter type of Bottom: 1. Shorts 2. Long Pants");
+            int bottomType = Integer.parseInt(scanner.nextLine());
+            Bottoms item;
+            if (bottomType == 1) {
+                System.out.println("Enter length:");
+                String length = scanner.nextLine();
+                item = new Shorts(name, price, quantity, waistSize, length);
+            } else {
+                System.out.println("Enter fit:");
+                String fit = scanner.nextLine();
+                item = new LongPants(name, price, quantity, waistSize, fit);
+            }
+            admin.addNewItem(item, quantity);
+        }
+    }
+    //This is how items are removed
+    private static void removeItem(Admin admin, Scanner scanner) {
+        System.out.println("Enter item name:");
+        String itemName = scanner.nextLine();
+        System.out.println("Enter quantity to remove:");
+        int quantity = Integer.parseInt(scanner.nextLine());
+        admin.removeItem(itemName, quantity);
+    }
+}
